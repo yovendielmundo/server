@@ -18,7 +18,7 @@ cargo test
 
 ### Deploy (Docker)
 ```shell
-cargo publish --release
+cargo build --release
 docker build -t $USER/server:latest .
 docker run -it --rm --name server $USER/server:latest
 ```
