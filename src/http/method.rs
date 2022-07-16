@@ -1,7 +1,5 @@
-use std::fmt::Display;
 use std::str::FromStr;
-use std::fmt::Formatter;
-use std::fmt::Result as FmtResult;
+
 pub enum Method {
     GET,
     POST,

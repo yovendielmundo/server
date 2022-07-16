@@ -30,7 +30,9 @@ impl Server {
                             println!("{}", String::from_utf8_lossy(&buf));
                             match Request::try_from(&buf[..]) {
                                 Ok(_) => {}
-                                Err(e) => {println!("Failed to parse the request: {}", e)}
+                                Err(e) => {
+                                    println!("Failed to parse the request: {}", e)
+                                }
                             }
                         }
                         Err(e) => println!("Failed to read from connection: {}", e),
