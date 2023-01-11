@@ -1,6 +1,15 @@
-use std::{io::Read, io::Write, net::TcpListener};
+use std::{io::Read, net::TcpListener};
 
-use crate::http::{Request, Response, StatusCode};
+use crate::http::{ParseError, Request, Response, StatusCode};
+
+pub trait Handler {
+    fn handle_request(&mut self, request: &Request) -> Response;
+
+    fn handle_bad_request(&mut self, e: &ParseError) -> Response {
+        println!("Failed to parse the request: {}", e);
+        Response::new(StatusCode::BadRequest, None)
+    }
+}
 
 pub struct Server {
     addr: String,
@@ -11,7 +20,7 @@ impl Server {
         Self { addr }
     }
 
-    pub fn run(self) {
+    pub fn run(self, mut handler: impl Handler) {
         // fn run takes ownership of the struct because
         // of the absence of & before `self` The object will be deallocated when the functions ends
         println!("Listening on {}", self.addr);
@@ -24,24 +33,15 @@ impl Server {
                     match stream.read(&mut buf) {
                         Ok(nbytes) => {
                             println!(
-                                "Received a request. addr:[{}] nbytes:[{}]",
+                                "Request received! [addr:{}, nbytes:{}]\n{}",
                                 addr.to_string(),
-                                nbytes
+                                nbytes,
+                                String::from_utf8_lossy(&buf)
                             );
-                            println!("{}", String::from_utf8_lossy(&buf));
 
                             let response = match Request::try_from(&buf[..]) {
-                                Ok(request) => {
-                                    dbg!(request);
-                                    Response::new(
-                                        StatusCode::Ok,
-                                        Some("<h1>It Works!!</h1>".to_string()),
-                                    )
-                                }
-                                Err(e) => {
-                                    println!("Failed to parse the request: {}", e);
-                                    Response::new(StatusCode::BadRequest, None)
-                                }
+                                Ok(request) => handler.handle_request(&request),
+                                Err(e) => handler.handle_bad_request(&e),
                             };
 
                             if let Err(e) = response.send(&mut stream) {

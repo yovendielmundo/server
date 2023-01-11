@@ -16,6 +16,20 @@ pub struct Request<'buf> {
     method: Method,
 }
 
+impl<'buf> Request<'buf> {
+    pub fn path(&self) -> &str {
+        &self.path
+    }
+
+    pub fn method(&self) -> &Method {
+        &self.method
+    }
+
+    pub fn query_string(&self) -> Option<&QueryString> {
+        self.query_string.as_ref()
+    }
+}
+
 impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
     type Error = ParseError;
 
@@ -26,8 +40,6 @@ impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
         let (method, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
         let (mut path, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
         let (protocol, _) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
-
-        println!("{}, {}, {}", method, path, protocol);
 
         if protocol != "HTTP/1.1" {
             return Err(ParseError::InvalidProtocol);
